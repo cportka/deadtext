@@ -1,0 +1,37 @@
+{
+  "name": "dottxt.app",
+  "version": "1.0.0",
+  "description": "a simple raw text viewer and editor",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "jest --verbose"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cportka/deadtext"
+  },
+  "keywords": [
+    "text-editor"
+  ],
+  "author": "chris portka",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cportka/dottxt/issues"
+  },
+  "homepage": "https://github.com/cportka/dottxt#readme",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.59.9",
+    "eslint": "^8.42.0",
+    "eslint-config-standard-with-typescript": "^35.0.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-n": "^15.7.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-react": "^7.32.2",
+    "jest": "^31.0.0",
+    "typescript": "^5.1.3"
+  },
+  "dependencies": {
+    "electron": "^25.1.0"
+  }
+}
