@@ -1,3 +1,25 @@
 <!DOCTYPE html>
 <html>
-  <body>
+  <head>
+    <meta charset="UTF-8">
+    <title>dead text</title>
+    <style>
+      #text-editor {
+          border: none;
+          width: 100%;
+          height: 100%;
+          box-sizing: border-box;
+          padding: 10px;
+          outline: none;
+          resize: none;
+          overflow: auto;
+          font-family: 'Helvetica', 'Arial', sans-serif;
+          font-size: 16px;
+      }
+    </style>
+  </head>
+  <body onclick="document.getElementById('text-editor').focus();">
+    <textarea id="text-editor"></textarea>
+    <script src="renderer.js"></script>
+  </body>
+</html>
