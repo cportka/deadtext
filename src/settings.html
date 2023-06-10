@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Settings</title>
+  <style>
+    /* Add your CSS here */
+  </style>
+</head>
+<body>
+  <form id="settings-form">
+    <label for="start-dir">Start Directory:</label><br>
+    <input type="text" id="start-dir" name="start-dir"><br>
+    <label for="home-dir">Home Directory:</label><br>
+    <input type="text" id="home-dir" name="home-dir"><br>
+    <label for="background-color">Background Color:</label><br>
+    <input type="color" id="background-color" name="background-color" value="#000000"><br>
+    <label for="text-color">Text Color:</label><br>
+    <input type="color" id="text-color" name="text-color" value="#FAFAFA"><br>
+    <label for="font">Font:</label><br>
+    <select id="font" name="font">
+      <option value="Monaco">Monaco</option>
+      <!-- Add other font options here -->
+    </select><br>
+    <input type="submit" value="Save Settings">
+  </form>
+  <script src="settings.js"></script>
+</body>
+</html>
