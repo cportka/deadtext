@@ -6,58 +6,63 @@ const fs = require('fs');
 module.exports = {
   showAbout: () => {
     const win = BrowserWindow.getFocusedWindow();
+    // Read README.md content to display (falls back if not found)
     const readmePath = path.join(__dirname, 'README.md');
-    let readmeContent = "README not found.";
-    if(fs.existsSync(readmePath)){
+    let readmeContent = "DeadText – a minimalist text editor.\n(c) 2023 Chris Portka";
+    if (fs.existsSync(readmePath)) {
       readmeContent = fs.readFileSync(readmePath, 'utf-8');
     }
     dialog.showMessageBox(win, {
       type: 'info',
-      buttons: ['Ok'],
-      title: 'About',
+      buttons: ['OK'],
+      title: 'About DeadText',
       message: readmeContent
     });
   },
 
-  showSettings: () => {
-    const win = BrowserWindow.getFocusedWindow();
-    win.loadFile('settings.html');
-  },
-
   openFile: (win) => {
+    // Default to last used open path or the desktop directory
+    const defaultDir = settings.get('defaultOpenPath', app.getPath('desktop'));
     dialog.showOpenDialog(win, {
-      defaultPath: settings.get('defaultOpenPath', path.resolve(app.getPath('home'), 'Desktop')),
+      defaultPath: defaultDir,
       properties: ['openFile']
     }).then(result => {
       if (!result.canceled && result.filePaths.length > 0) {
-        win.webContents.send('load-file', result.filePaths[0]);
-        settings.set('defaultOpenPath', path.dirname(result.filePaths[0]));
+        const filePath = result.filePaths[0];
+        // Send the file path to renderer to load contents
+        win.webContents.send('load-file', filePath);
+        // Remember the directory for next time
+        settings.set('defaultOpenPath', path.dirname(filePath));
       }
+    }).catch(err => {
+      console.error("Error opening file:", err);
     });
   },
 
   saveFile: (win) => {
+    // Instruct renderer to save. If it has no file path, the renderer will request Save As.
     win.webContents.send('save-file');
   },
 
   saveFileAs: (win) => {
+    // Default to last used save directory or desktop, with a default filename
+    const defaultPath = settings.get('defaultSavePath', path.join(app.getPath('desktop'), 'Untitled.txt'));
     dialog.showSaveDialog(win, {
-      defaultPath: settings.get('defaultSavePath', path.resolve(app.getPath('home'), 'Desktop', 'Untitled.txt'))
+      defaultPath: defaultPath
     }).then(result => {
       if (!result.canceled && result.filePath) {
-        win.webContents.send('save-file-as', result.filePath);
-        settings.set('defaultSavePath', path.dirname(result.filePath));
+        const filePath = result.filePath;
+        // Send the chosen path to renderer to perform the file write
+        win.webContents.send('save-file-as', filePath);
+        // Remember the directory for next time
+        settings.set('defaultSavePath', path.dirname(filePath));
       }
+    }).catch(err => {
+      console.error("Error saving file:", err);
     });
   },
 
   closeWindow: (win) => {
-    win.close();
-  },
-
-  quitApp: (app) => {
-    BrowserWindow.getAllWindows().forEach(win => {
-      win.webContents.send('quit-app');
-    });
+    if (win) win.close();
   }
 };
