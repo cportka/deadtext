@@ -20,7 +20,6 @@ function createWindow() {
     }
   });
   
-
   // Load the main HTML file
   win.loadFile(path.join(__dirname, 'src', 'index.html'));
 
@@ -33,6 +32,9 @@ function createWindow() {
 
 // Set up application menus with standard items and our file actions
 app.whenReady().then(() => {
+  if (process.platform === 'darwin') {
+    app.name = 'DeadText';  // **Ensure app name is DeadText for macOS menu**
+  }
   createWindow();
 
   const template = [

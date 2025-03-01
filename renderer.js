@@ -8,11 +8,23 @@ window.onload = () => {
   // Intercept Ctrl+S / Cmd+S for save
   textArea.addEventListener('keydown', (e) => {
     const isMac = navigator.platform.includes('Mac');
-    if ((isMac ? e.metaKey : e.ctrlKey) && e.keyCode === 83) {  // Cmd/Ctrl + S
-      e.preventDefault();
-      ipcRenderer.send('save-file');
+    // Ctrl+S / Cmd+S to save
+    if ((isMac ? e.metaKey : e.ctrlKey) && e.keyCode === 83) {
+        e.preventDefault();
+        ipcRenderer.send('save-file');
     }
-    // (Optional: you could add other shortcuts like Ctrl+O, Ctrl+N, Ctrl+W similarly)
+
+    if (e.key === 'Tab' || e.keyCode === 9) {  
+        e.preventDefault();
+        const start = textArea.selectionStart;
+        const end = textArea.selectionEnd;
+        // Insert a tab at the caret
+        textArea.value = textArea.value.substring(0, start) + "\t" + textArea.value.substring(end);
+        // Move cursor after the inserted tab
+        textArea.selectionStart = textArea.selectionEnd = start + 1;
+    }
+
+    // (TODO: add other shortcuts like Ctrl+O, Ctrl+N, Ctrl+W similarly)
   });
 };
 

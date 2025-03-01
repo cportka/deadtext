@@ -22,9 +22,9 @@ module.exports = {
 
   openFile: (win) => {
     // Default to last used open path or the desktop directory
-    const defaultDir = settings.get('defaultOpenPath', app.getPath('desktop'));
+    const defaultDir = settings.getSync('defaultOpenPath') || app.getPath('desktop');
     dialog.showOpenDialog(win, {
-      defaultPath: defaultDir,
+      defaultPath: defaultDir,            // ensure this is a string
       properties: ['openFile']
     }).then(result => {
       if (!result.canceled && result.filePaths.length > 0) {
@@ -32,7 +32,7 @@ module.exports = {
         // Send the file path to renderer to load contents
         win.webContents.send('load-file', filePath);
         // Remember the directory for next time
-        settings.set('defaultOpenPath', path.dirname(filePath));
+        settings.setSync('defaultOpenPath', path.dirname(filePath));
       }
     }).catch(err => {
       console.error("Error opening file:", err);
@@ -45,17 +45,18 @@ module.exports = {
   },
 
   saveFileAs: (win) => {
-    // Default to last used save directory or desktop, with a default filename
-    const defaultPath = settings.get('defaultSavePath', path.join(app.getPath('desktop'), 'Untitled.txt'));
+    // Default to last used save directory or desktop with default filename
+    const defaultPath = settings.getSync('defaultSavePath') 
+                        || path.join(app.getPath('desktop'), 'untitled.txt');
     dialog.showSaveDialog(win, {
-      defaultPath: defaultPath
+      defaultPath: defaultPath           // ensure this is a string
     }).then(result => {
       if (!result.canceled && result.filePath) {
         const filePath = result.filePath;
         // Send the chosen path to renderer to perform the file write
         win.webContents.send('save-file-as', filePath);
         // Remember the directory for next time
-        settings.set('defaultSavePath', path.dirname(filePath));
+        settings.setSync('defaultSavePath', path.dirname(filePath));
       }
     }).catch(err => {
       console.error("Error saving file:", err);
