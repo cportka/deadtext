@@ -11,6 +11,7 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 800,
     height: 600,
+    title: "DeadText",
     x: lastWindow ? lastWindow.getPosition()[0] + 20 : undefined,
     y: lastWindow ? lastWindow.getPosition()[1] + 20 : undefined,
     webPreferences: {
@@ -18,6 +19,7 @@ function createWindow() {
       // enableRemoteModule: true,  // NOT using remote, so not needed
     }
   });
+  
 
   // Load the main HTML file
   win.loadFile(path.join(__dirname, 'src', 'index.html'));
@@ -83,12 +85,12 @@ app.whenReady().then(() => {
 
 // IPC event handlers for save operations (from renderer)
 ipcMain.on('save-file', (event) => {
-  const win = BrowserWindow.fromWebContents(event.sender);
-  dialogModule.saveFile(win);
+  const win = BrowserWindow.getFocusedWindow();
+  require('./dialog').saveFile(win);   // trigger save (uses dialog.js logic)
 });
 ipcMain.on('save-file-as', (event) => {
-  const win = BrowserWindow.fromWebContents(event.sender);
-  dialogModule.saveFileAs(win);
+  const win = BrowserWindow.getFocusedWindow();
+  require('./dialog').saveFileAs(win); // trigger "Save As" dialog
 });
 ipcMain.on('open-file', (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
@@ -98,3 +100,4 @@ ipcMain.on('close-window', (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   dialogModule.closeWindow(win);
 });
+

@@ -42,13 +42,27 @@ ipcRenderer.on('save-file', () => {
 });
 
 // Save content to a new file (for "Save As" action)
-ipcRenderer.on('save-file-as', (event, newPath) => {
-  if (!newPath) return;  // If no path provided (dialog canceled), do nothing
-  const content = document.getElementById('text-editor').value;
-  fs.writeFile(newPath, content, (err) => {
-    if (err) {
-      return console.error('Error saving file:', err);
-    }
-    filePath = newPath;  // Update current file path to the new saved file
+ipcRenderer.on('save-file-as', (event, targetPath) => {
+  if (!targetPath) return;  // dialog was canceled or no path provided
+  let content = document.getElementById('text-editor').value;
+  fs.writeFile(targetPath, content, (err) => {
+      if (err) {
+          console.error('Error saving file: ' + err);
+      }
   });
+  filePath = targetPath; // Update current file path to the new saved file
+});
+
+document.querySelector('#text-editor').addEventListener('keydown', function(e) {
+  if (e.key === 'Tab' || e.keyCode === 9) {  
+      e.preventDefault();
+      const textEditor = document.getElementById('text-editor');
+      // Insert a tab at the current selection/cursor
+      textEditor.setRangeText('\t', textEditor.selectionStart, textEditor.selectionEnd, 'end');
+      return;  // exit, so we don’t fall through to other shortcuts
+  }
+  if (e.keyCode === 83 && (navigator.platform.match('Mac') ? e.metaKey : e.ctrlKey)) {
+      e.preventDefault();
+      ipcRenderer.send('save-file');
+  }
 });
