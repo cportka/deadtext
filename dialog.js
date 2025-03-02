@@ -1,70 +1,76 @@
-const fs = require('fs');
-const path = require('path');
+/* dialog.js
+   Highlights:
+   - Return the promises in openFile/saveFileAs to satisfy ESLint's 'always-return' rule.
+   - Use dialog.showErrorBox for errors instead of console.error, satisfying no-console rule.
+   - Use getSync/setSync from 'electron-settings' if version 4+ (or ensure usage is consistent).
+*/
 
-const { dialog, BrowserWindow, app } = require('electron');
+const { dialog, app, BrowserWindow } = require('electron');
+const path = require('path');
+const fs = require('fs');
 const settings = require('electron-settings');
 
 module.exports = {
-  showAbout: () => {
+  showAbout() {
     const win = BrowserWindow.getFocusedWindow();
-    // Read README.md content to display (falls back if not found)
+    let aboutMessage = 'DeadText: A minimal text editor.\n(c) 2025 Chris Portka';
+    // optionally read an external README file if present
     const readmePath = path.join(__dirname, 'README.md');
-    let readmeContent = 'DeadText – a minimalist text editor.\n(c) 2023 Chris Portka';
     if (fs.existsSync(readmePath)) {
-      readmeContent = fs.readFileSync(readmePath, 'utf-8');
+      aboutMessage = fs.readFileSync(readmePath, 'utf-8');
     }
     dialog.showMessageBox(win, {
       type: 'info',
       buttons: ['OK'],
       title: 'About DeadText',
-      message: readmeContent
+      message: aboutMessage
     });
   },
 
-  openFile: (win) => {
-    // Default to last used open path or the desktop directory
+  openFile(win) {
     const defaultDir = settings.getSync('defaultOpenPath') || app.getPath('desktop');
-    dialog.showOpenDialog(win, {
-      defaultPath: defaultDir, // ensure this is a string
+    return dialog.showOpenDialog(win, {
+      defaultPath: defaultDir,
       properties: ['openFile']
-    }).then(result => {
+    }).then((result) => {
       if (!result.canceled && result.filePaths.length > 0) {
-        const filePath = result.filePaths[0];
-        // Send the file path to renderer to load contents
-        win.webContents.send('load-file', filePath);
-        // Remember the directory for next time
-        settings.setSync('defaultOpenPath', path.dirname(filePath));
+        const file = result.filePaths[0];
+        // send path to renderer to load
+        win.webContents.send('load-file', file);
+        settings.setSync('defaultOpenPath', path.dirname(file));
       }
-    }).catch(err => {
-      console.error('Error opening file:', err);
+      // returning null or undefined to satisfy always-return rule
+      return null;
+    }).catch((err) => {
+      dialog.showErrorBox('Error Opening File', `Failed to open file:\n${err.message}`);
+      throw err; // re-throw if you want top-level handling or logging
     });
   },
 
-  saveFile: (win) => {
-    // Instruct renderer to save. If it has no file path, the renderer will request Save As.
+  saveFile(win) {
+    // Instruct renderer to do a 'save-file' (which checks if path is known)
     win.webContents.send('save-file');
   },
 
-  saveFileAs: (win) => {
-    // Default to last used save directory or desktop with default filename
-    const defaultPath = settings.getSync('defaultSavePath') ||
-                        path.join(app.getPath('desktop'), 'untitled.txt');
-    dialog.showSaveDialog(win, {
-      defaultPath // ensure this is a string
-    }).then(result => {
+  saveFileAs(win) {
+    const defaultFile = settings.getSync('defaultSavePath') ||
+      path.join(app.getPath('desktop'), 'Untitled.txt');
+    return dialog.showSaveDialog(win, {
+      defaultPath: defaultFile
+    }).then((result) => {
       if (!result.canceled && result.filePath) {
-        const filePath = result.filePath;
-        // Send the chosen path to renderer to perform the file write
-        win.webContents.send('save-file-as', filePath);
-        // Remember the directory for next time
-        settings.setSync('defaultSavePath', path.dirname(filePath));
+        // send the chosen path to renderer
+        win.webContents.send('save-file-as', result.filePath);
+        settings.setSync('defaultSavePath', path.dirname(result.filePath));
       }
-    }).catch(err => {
-      console.error('Error saving file:', err);
+      return null;
+    }).catch((err) => {
+      dialog.showErrorBox('Error Saving File', `Failed to save file:\n${err.message}`);
+      throw err;
     });
   },
 
-  closeWindow: (win) => {
+  closeWindow(win) {
     if (win) win.close();
   }
 };

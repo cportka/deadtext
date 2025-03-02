@@ -1,81 +1,82 @@
-const fs = require('fs');
+/* renderer.js
+   Highlights:
+   - Single 'keydown' event listener handles Tab insertion and Ctrl/Cmd+S.
+   - Save logic listens for 'save-file' and 'save-file-as' events from main.
+   - Alerts or notifies user on error instead of console.log.
+*/
 
 const { ipcRenderer } = require('electron');
+const fs = require('fs');
 
-let filePath = null; // Tracks the current file path (if saved/opened)
+let filePath = null;
 
 window.onload = () => {
-  const textArea = document.getElementById('text-editor');
-  // Intercept Ctrl+S / Cmd+S for save
-  textArea.addEventListener('keydown', (e) => {
+  const textEditor = document.getElementById('text-editor');
+
+  textEditor.addEventListener('keydown', (e) => {
     const isMac = navigator.platform.includes('Mac');
-    // Ctrl+S / Cmd+S to save
+
+    // Insert '\t' on Tab key press
+    if (e.key === 'Tab' || e.keyCode === 9) {
+      e.preventDefault();
+      // Insert a tab at current cursor position
+      textEditor.setRangeText('\t',
+        textEditor.selectionStart,
+        textEditor.selectionEnd,
+        'end'
+      );
+      return;
+    }
+
+    // Ctrl+S / Cmd+S for save
     if ((isMac ? e.metaKey : e.ctrlKey) && e.keyCode === 83) {
       e.preventDefault();
       ipcRenderer.send('save-file');
     }
-
-    if (e.key === 'Tab' || e.keyCode === 9) {
-      e.preventDefault();
-      const start = textArea.selectionStart;
-      const end = textArea.selectionEnd;
-      // Insert a tab at the caret
-      textArea.value = textArea.value.substring(0, start) + '\t' + textArea.value.substring(end);
-      // Move cursor after the inserted tab
-      textArea.selectionStart = textArea.selectionEnd = start + 1;
-    }
-
-    // (TODO: add other shortcuts like Ctrl+O, Ctrl+N, Ctrl+W similarly)
   });
 };
 
-// Load file content when main process provides a file path
+/** Load file content upon openFile request */
 ipcRenderer.on('load-file', (event, path) => {
   fs.readFile(path, 'utf-8', (err, data) => {
     if (err) {
-      return console.error('Could not open file:', err);
+      alert(`Could not open file:\n${err.message}`);
+      return;
     }
     document.getElementById('text-editor').value = data;
     filePath = path;
   });
 });
 
-// Save current content to disk (for "Save" action)
+/** 'save-file': Save to current path if it exists, otherwise trigger 'save-file-as'. */
 ipcRenderer.on('save-file', () => {
-  if (filePath) {
-    // Write to existing file
-    const content = document.getElementById('text-editor').value;
-    fs.writeFile(filePath, content, (err) => {
-      if (err) console.error('Error saving file:', err);
-    });
-  } else {
-    // No file yet – trigger a Save As flow in main
+  if (!filePath) {
+    // no existing path => must do Save As
     ipcRenderer.send('save-file-as');
+    return;
   }
-});
-
-// Save content to a new file (for "Save As" action)
-ipcRenderer.on('save-file-as', (event, targetPath) => {
-  if (!targetPath) return; // dialog was canceled or no path provided
   const content = document.getElementById('text-editor').value;
-  fs.writeFile(targetPath, content, (err) => {
+  fs.writeFile(filePath, content, (err) => {
     if (err) {
-      console.error('Error saving file: ' + err);
+      alert(`Error saving file:\n${err.message}`);
+      return;
     }
+    // file saved successfully - could show success notification if needed
   });
-  filePath = targetPath; // Update current file path to the new saved file
 });
 
-document.querySelector('#text-editor').addEventListener('keydown', function (e) {
-  if (e.key === 'Tab' || e.keyCode === 9) {
-    e.preventDefault();
-    const textEditor = document.getElementById('text-editor');
-    // Insert a tab at the current selection/cursor
-    textEditor.setRangeText('\t', textEditor.selectionStart, textEditor.selectionEnd, 'end');
-    return; // exit, so we don’t fall through to other shortcuts
+/** 'save-file-as': Main provides a chosen path; we write to that file and track it. */
+ipcRenderer.on('save-file-as', (event, chosenPath) => {
+  if (!chosenPath) {
+    // user canceled
+    return;
   }
-  if (e.keyCode === 83 && (navigator.platform.match('Mac') ? e.metaKey : e.ctrlKey)) {
-    e.preventDefault();
-    ipcRenderer.send('save-file');
-  }
+  const content = document.getElementById('text-editor').value;
+  fs.writeFile(chosenPath, content, (err) => {
+    if (err) {
+      alert(`Error saving file:\n${err.message}`);
+      return;
+    }
+    filePath = chosenPath;
+  });
 });

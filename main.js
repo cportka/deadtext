@@ -1,73 +1,81 @@
-const path = require('path');
+/* main.js
+   Highlights:
+   - Set app.name = 'DeadText' before creating menu (particularly for macOS).
+   - Return or handle the promise from app.whenReady() to avoid ESLint 'catch-or-return' warnings.
+   - Provide a consistent window title (DeadText) and loadFile from 'src/index.html'.
+*/
 
 const { app, BrowserWindow, Menu, ipcMain } = require('electron');
+const path = require('path');
+const dialogModule = require('./dialog');
 
-const dialogModule = require('./dialog'); // our module for dialog actions
+let windows = [];
 
-// Keep track of open windows (for offset positioning on new windows)
-const windows = [];
-
-function createWindow () {
+function createWindow() {
   const lastWindow = windows[windows.length - 1];
-  // Offset new window a bit if one already open
   const win = new BrowserWindow({
     width: 800,
     height: 600,
     title: 'DeadText',
-    x: lastWindow ? lastWindow.getPosition()[0] + 20 : undefined,
-    y: lastWindow ? lastWindow.getPosition()[1] + 20 : undefined,
+    x: lastWindow ? lastWindow.getPosition()[0] + 25 : undefined,
+    y: lastWindow ? lastWindow.getPosition()[1] + 25 : undefined,
     webPreferences: {
       nodeIntegration: true
-      // enableRemoteModule: true,  // NOT using remote, so not needed
     }
   });
 
-  // Load the main HTML file
   win.loadFile(path.join(__dirname, 'src', 'index.html'));
-
   windows.push(win);
+
   win.on('closed', () => {
-    // Remove from window list on close
-    windows.splice(windows.indexOf(win), 1);
+    windows = windows.filter(w => w !== win);
   });
 }
 
-// Set up application menus with standard items and our file actions
+app.name = 'DeadText'; // sets the name used in macOS menu bar
 app.whenReady().then(() => {
-  if (process.platform === 'darwin') {
-    app.name = 'DeadText'; // **Ensure app name is DeadText for macOS menu**
-  }
   createWindow();
 
   const template = [
     {
       label: 'File',
       submenu: [
-        { label: 'New', click: () => createWindow() }, // Open a new editor window
+        { label: 'New', click: () => createWindow() },
         { label: 'Open', click: () => dialogModule.openFile(BrowserWindow.getFocusedWindow()) },
         { label: 'Save', click: () => dialogModule.saveFile(BrowserWindow.getFocusedWindow()) },
         { label: 'Save As', click: () => dialogModule.saveFileAs(BrowserWindow.getFocusedWindow()) },
         { label: 'Close', click: () => dialogModule.closeWindow(BrowserWindow.getFocusedWindow()) },
-        // On Windows/Linux, this will appear as "Exit". On macOS, it's handled in the app menu as "Quit <AppName>"
         { role: 'quit' }
       ]
     },
     {
       label: 'Edit',
-      submenu: [{ role: 'undo' }, { role: 'redo' }, { type: 'separator' },
-        { role: 'cut' }, { role: 'copy' }, { role: 'paste' }]
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' }
+      ]
     },
     {
       label: 'View',
-      submenu: [{ role: 'reload' }, { role: 'toggledevtools' }, { type: 'separator' },
-        { role: 'resetzoom' }, { role: 'zoomin' }, { role: 'zoomout' },
-        { type: 'separator' }, { role: 'togglefullscreen' }]
+      submenu: [
+        { role: 'reload' },
+        { role: 'toggledevtools' },
+        { type: 'separator' },
+        { role: 'resetzoom' },
+        { role: 'zoomin' },
+        { role: 'zoomout' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
     },
     {
       label: 'Help',
       submenu: [
-        { label: 'About', click: () => dialogModule.showAbout() }
-        // (Settings removed for minimalism)
+        { label: 'About DeadText', click: () => dialogModule.showAbout() }
       ]
     }
   ];
@@ -75,31 +83,40 @@ app.whenReady().then(() => {
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 
-  // Windows/Linux: quit app when all windows are closed. On macOS, leave app running.
+  // standard OS-specific close behavior
   app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit();
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
   });
-  // macOS: recreate a window when dock icon is clicked and no windows open
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
   });
+  return null; // returning a value to satisfy always-return rule
+}).catch(err => {
+  // optional catch for app.whenReady() promise
+  console.error('Error during app initialization:', err);
 });
 
-// IPC event handlers for save operations (from renderer)
+// IPC hooks (renderer to main)
 ipcMain.on('save-file', (event) => {
-  const win = BrowserWindow.getFocusedWindow();
-  require('./dialog').saveFile(win); // trigger save (uses dialog.js logic)
+  const win = BrowserWindow.fromWebContents(event.sender);
+  dialogModule.saveFile(win);
 });
+
 ipcMain.on('save-file-as', (event) => {
-  const win = BrowserWindow.getFocusedWindow();
-  require('./dialog').saveFileAs(win); // trigger "Save As" dialog
+  const win = BrowserWindow.fromWebContents(event.sender);
+  dialogModule.saveFileAs(win);
 });
+
 ipcMain.on('open-file', (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   dialogModule.openFile(win);
 });
+
 ipcMain.on('close-window', (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   dialogModule.closeWindow(win);
