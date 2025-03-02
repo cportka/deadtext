@@ -1,14 +1,15 @@
+const fs = require('fs');
+const path = require('path');
+
 const { dialog, BrowserWindow, app } = require('electron');
 const settings = require('electron-settings');
-const path = require('path');
-const fs = require('fs');
 
 module.exports = {
   showAbout: () => {
     const win = BrowserWindow.getFocusedWindow();
     // Read README.md content to display (falls back if not found)
     const readmePath = path.join(__dirname, 'README.md');
-    let readmeContent = "DeadText – a minimalist text editor.\n(c) 2023 Chris Portka";
+    let readmeContent = 'DeadText – a minimalist text editor.\n(c) 2023 Chris Portka';
     if (fs.existsSync(readmePath)) {
       readmeContent = fs.readFileSync(readmePath, 'utf-8');
     }
@@ -24,7 +25,7 @@ module.exports = {
     // Default to last used open path or the desktop directory
     const defaultDir = settings.getSync('defaultOpenPath') || app.getPath('desktop');
     dialog.showOpenDialog(win, {
-      defaultPath: defaultDir,            // ensure this is a string
+      defaultPath: defaultDir, // ensure this is a string
       properties: ['openFile']
     }).then(result => {
       if (!result.canceled && result.filePaths.length > 0) {
@@ -35,7 +36,7 @@ module.exports = {
         settings.setSync('defaultOpenPath', path.dirname(filePath));
       }
     }).catch(err => {
-      console.error("Error opening file:", err);
+      console.error('Error opening file:', err);
     });
   },
 
@@ -46,10 +47,10 @@ module.exports = {
 
   saveFileAs: (win) => {
     // Default to last used save directory or desktop with default filename
-    const defaultPath = settings.getSync('defaultSavePath') 
-                        || path.join(app.getPath('desktop'), 'untitled.txt');
+    const defaultPath = settings.getSync('defaultSavePath') ||
+                        path.join(app.getPath('desktop'), 'untitled.txt');
     dialog.showSaveDialog(win, {
-      defaultPath: defaultPath           // ensure this is a string
+      defaultPath // ensure this is a string
     }).then(result => {
       if (!result.canceled && result.filePath) {
         const filePath = result.filePath;
@@ -59,7 +60,7 @@ module.exports = {
         settings.setSync('defaultSavePath', path.dirname(filePath));
       }
     }).catch(err => {
-      console.error("Error saving file:", err);
+      console.error('Error saving file:', err);
     });
   },
 

@@ -1,25 +1,27 @@
-const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const path = require('path');
-const dialogModule = require('./dialog');  // our module for dialog actions
+
+const { app, BrowserWindow, Menu, ipcMain } = require('electron');
+
+const dialogModule = require('./dialog'); // our module for dialog actions
 
 // Keep track of open windows (for offset positioning on new windows)
-let windows = [];
+const windows = [];
 
-function createWindow() {
+function createWindow () {
   const lastWindow = windows[windows.length - 1];
   // Offset new window a bit if one already open
   const win = new BrowserWindow({
     width: 800,
     height: 600,
-    title: "DeadText",
+    title: 'DeadText',
     x: lastWindow ? lastWindow.getPosition()[0] + 20 : undefined,
     y: lastWindow ? lastWindow.getPosition()[1] + 20 : undefined,
     webPreferences: {
-      nodeIntegration: true,
+      nodeIntegration: true
       // enableRemoteModule: true,  // NOT using remote, so not needed
     }
   });
-  
+
   // Load the main HTML file
   win.loadFile(path.join(__dirname, 'src', 'index.html'));
 
@@ -33,7 +35,7 @@ function createWindow() {
 // Set up application menus with standard items and our file actions
 app.whenReady().then(() => {
   if (process.platform === 'darwin') {
-    app.name = 'DeadText';  // **Ensure app name is DeadText for macOS menu**
+    app.name = 'DeadText'; // **Ensure app name is DeadText for macOS menu**
   }
   createWindow();
 
@@ -41,25 +43,25 @@ app.whenReady().then(() => {
     {
       label: 'File',
       submenu: [
-        { label: 'New', click: () => createWindow() },                     // Open a new editor window
+        { label: 'New', click: () => createWindow() }, // Open a new editor window
         { label: 'Open', click: () => dialogModule.openFile(BrowserWindow.getFocusedWindow()) },
         { label: 'Save', click: () => dialogModule.saveFile(BrowserWindow.getFocusedWindow()) },
         { label: 'Save As', click: () => dialogModule.saveFileAs(BrowserWindow.getFocusedWindow()) },
         { label: 'Close', click: () => dialogModule.closeWindow(BrowserWindow.getFocusedWindow()) },
         // On Windows/Linux, this will appear as "Exit". On macOS, it's handled in the app menu as "Quit <AppName>"
-        { role: 'quit' }  
+        { role: 'quit' }
       ]
     },
     {
       label: 'Edit',
-      submenu: [ { role: 'undo' }, { role: 'redo' }, { type: 'separator' },
-                 { role: 'cut' }, { role: 'copy' }, { role: 'paste' } ]
+      submenu: [{ role: 'undo' }, { role: 'redo' }, { type: 'separator' },
+        { role: 'cut' }, { role: 'copy' }, { role: 'paste' }]
     },
     {
       label: 'View',
-      submenu: [ { role: 'reload' }, { role: 'toggledevtools' }, { type: 'separator' },
-                 { role: 'resetzoom' }, { role: 'zoomin' }, { role: 'zoomout' }, 
-                 { type: 'separator' }, { role: 'togglefullscreen' } ]
+      submenu: [{ role: 'reload' }, { role: 'toggledevtools' }, { type: 'separator' },
+        { role: 'resetzoom' }, { role: 'zoomin' }, { role: 'zoomout' },
+        { type: 'separator' }, { role: 'togglefullscreen' }]
     },
     {
       label: 'Help',
@@ -88,7 +90,7 @@ app.whenReady().then(() => {
 // IPC event handlers for save operations (from renderer)
 ipcMain.on('save-file', (event) => {
   const win = BrowserWindow.getFocusedWindow();
-  require('./dialog').saveFile(win);   // trigger save (uses dialog.js logic)
+  require('./dialog').saveFile(win); // trigger save (uses dialog.js logic)
 });
 ipcMain.on('save-file-as', (event) => {
   const win = BrowserWindow.getFocusedWindow();
@@ -102,4 +104,3 @@ ipcMain.on('close-window', (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   dialogModule.closeWindow(win);
 });
-
