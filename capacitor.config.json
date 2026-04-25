@@ -1,0 +1,11 @@
+{
+  "appId": "com.cportka.deadtext",
+  "appName": "DeadText",
+  "webDir": "dist-web",
+  "ios": {
+    "contentInset": "always"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

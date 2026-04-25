@@ -6,8 +6,15 @@ node_modules/
 
 # build artifacts
 dist/
+dist-web/
+dist-mobile/
 out/
 
 # editor / OS
 *.log
 .idea/
+
+# iOS Capacitor build outputs (project itself is committed once generated)
+ios/App/Pods/
+ios/App/build/
+ios/DerivedData/

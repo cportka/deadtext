@@ -10,10 +10,16 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  build:
-    name: ${{ matrix.os }}
+  desktop:
+    name: desktop / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -66,9 +72,131 @@ jobs:
             dist/*.rpm
             dist/latest*.yml
 
+  web:
+    name: web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build:web
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist-web
+
+      - name: Upload web bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: deadtext-web
+          path: dist-web/**
+
+  pages:
+    name: deploy pages
+    needs: web
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  android:
+    name: android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: android-actions/setup-android@v3
+
+      - run: npm ci
+      - run: npm run build:web
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: deadtext-android
+          if-no-files-found: error
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+  ios:
+    name: ios
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build:web
+
+      - name: Add iOS platform if missing
+        run: |
+          if [ ! -d ios ]; then
+            npx cap add ios
+          fi
+          npx cap sync ios
+
+      - name: Build iOS (Simulator, unsigned)
+        working-directory: ios/App
+        run: |
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Package .app
+        working-directory: ios/App
+        run: |
+          mkdir -p ../../dist-mobile
+          cp -R build/Build/Products/Debug-iphonesimulator/App.app ../../dist-mobile/DeadText.app
+          cd ../../dist-mobile
+          zip -ry DeadText-iOS-Simulator.zip DeadText.app
+
+      - name: Upload .app
+        uses: actions/upload-artifact@v4
+        with:
+          name: deadtext-ios-simulator
+          if-no-files-found: error
+          path: dist-mobile/DeadText-iOS-Simulator.zip
+
   release:
     name: release
-    needs: build
+    needs: [desktop, web, android, ios]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -82,7 +210,11 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/**/*
+          files: |
+            artifacts/deadtext-macOS/**
+            artifacts/deadtext-Windows/**
+            artifacts/deadtext-Linux/**
+            artifacts/deadtext-android/**
           draft: false
           prerelease: false
           generate_release_notes: true
