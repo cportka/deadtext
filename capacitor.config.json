@@ -1,7 +1,7 @@
 {
   "appId": "com.cportka.deadtext",
   "appName": "DeadText",
-  "webDir": "dist-web",
+  "webDir": "dist-web/app",
   "ios": {
     "contentInset": "always"
   },
