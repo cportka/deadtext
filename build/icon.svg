@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#101010"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="180" ry="180" fill="url(#bg)"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="520" fill="#f4f4f4" text-anchor="middle">
+    <text x="512" y="700" font-weight="700">DT</text>
+  </g>
+  <g stroke="#3a3a3a" stroke-width="6">
+    <line x1="160" y1="820" x2="864" y2="820"/>
+    <line x1="160" y1="880" x2="700" y2="880"/>
+  </g>
+</svg>

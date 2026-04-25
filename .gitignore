@@ -7,3 +7,7 @@ node_modules/
 # build artifacts
 dist/
 out/
+
+# editor / OS
+*.log
+.idea/

@@ -1,35 +1,45 @@
-<!-- src/index.html
-     Highlights:
-     - Title set to 'DeadText' to show in the window title (especially on Windows).
--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:;" />
   <title>DeadText</title>
   <style>
     html, body {
       width: 100%;
       height: 100%;
       margin: 0;
-      background: #fff;
-      font-family: sans-serif;
+      background: #ffffff;
+      color: #111111;
     }
     #text-editor {
+      display: block;
       width: 100%;
       height: 100%;
-      border: none;
-      resize: none;
-      padding: 8px;
+      margin: 0;
+      border: 0;
+      padding: 12px 14px;
       box-sizing: border-box;
-      font-family: monospace;
+      resize: none;
+      background: transparent;
+      color: inherit;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
       font-size: 14px;
+      line-height: 1.45;
+      tab-size: 4;
+      -moz-tab-size: 4;
+      white-space: pre;
+      overflow: auto;
     }
     #text-editor:focus { outline: none; }
+    @media (prefers-color-scheme: dark) {
+      html, body { background: #111111; color: #f4f4f4; }
+      #text-editor::placeholder { color: #666; }
+    }
   </style>
 </head>
 <body>
-  <textarea id="text-editor" placeholder="Type your text here..."></textarea>
-  <script src="../renderer.js"></script>
+  <textarea id="text-editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" wrap="off"></textarea>
+  <script src="renderer.js"></script>
 </body>
 </html>
