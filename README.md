@@ -37,10 +37,14 @@ fine from macOS or Linux runners.
 
 ```sh
 npm run build:web         # produces dist-web/
+npm run serve:web         # serve dist-web/ at http://127.0.0.1:5173
 ```
 
 `dist-web/` is a static site — drop it on any web host. Push to `main` and
-CI auto-deploys to GitHub Pages.
+CI auto-deploys to GitHub Pages. Layout:
+
+- `dist-web/`       — the landing page with auto-detected download buttons
+- `dist-web/app/`   — the PWA editor itself
 
 ## Build the mobile apps
 
