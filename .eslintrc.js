@@ -1,72 +1,23 @@
 module.exports = {
+  root: true,
   env: {
     browser: true,
-    commonjs: true,
-    es2021: true,
     node: true,
-    jest: true
+    es2022: true
   },
-  extends: [
-    'standard-with-typescript',
-    'plugin:react/recommended',
-    'plugin:react-hooks/recommended',
-    'plugin:import/errors',
-    'plugin:import/warnings',
-    'plugin:jsx-a11y/recommended',
-    'plugin:promise/recommended'
-  ],
   parserOptions: {
     ecmaVersion: 'latest',
-    sourceType: 'module',
-    ecmaFeatures: {
-      jsx: true
-    }
+    sourceType: 'script'
   },
-  plugins: [
-    'react',
-    'react-hooks',
-    'import',
-    'jsx-a11y',
-    'promise'
-  ],
-  settings: {
-    react: {
-      version: 'detect'
-    }
-  },
+  extends: ['eslint:recommended'],
   rules: {
-    // Indentation with 2 spaces
-    indent: ['error', 2],
-    // No trailing spaces
-    'no-trailing-spaces': 'error',
-    // Semicolons required
+    indent: ['error', 2, { SwitchCase: 1 }],
+    quotes: ['error', 'single', { avoidEscape: true }],
     semi: ['error', 'always'],
-    // Single quotes for strings
-    quotes: ['error', 'single'],
-    // Console logs warning (not error, to allow during development)
-    'no-console': 'warn',
-    // Require === instead of ==
-    eqeqeq: 'error',
-    // Enforce consistent spacing inside braces
-    'object-curly-spacing': ['error', 'always'],
-    // Enforce consistent line breaks
-    'object-curly-newline': ['error', {
-      ObjectExpression: { multiline: true, consistent: true },
-      ObjectPattern: { multiline: true, consistent: true }
-    }],
-    // React specific rules
-    'react/prop-types': 'error',
-    'react/jsx-uses-react': 'error',
-    'react/jsx-uses-vars': 'error',
-    'react-hooks/rules-of-hooks': 'error',
-    'react-hooks/exhaustive-deps': 'warn',
-    // Import rules
-    'import/no-unresolved': 'error',
-    'import/named': 'error',
-    'import/order': ['error', {
-      groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
-      'newlines-between': 'always',
-      alphabetize: { order: 'asc', caseInsensitive: true }
-    }]
-  }
+    eqeqeq: ['error', 'smart'],
+    'no-trailing-spaces': 'error',
+    'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    'no-console': 'off'
+  },
+  ignorePatterns: ['node_modules/', 'dist/', 'out/', 'package-lock.json']
 };
