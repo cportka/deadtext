@@ -1,77 +1,96 @@
-(() => {
-  const editor = document.getElementById('text-editor');
-  let savedSnapshot = '';
-  let dirty = false;
+import platform from './platform/index.js';
 
-  function setDirty(next) {
-    if (next === dirty) return;
-    dirty = next;
-    window.dt.setDirty(dirty);
-  }
+const editor = document.getElementById('text-editor');
+let savedSnapshot = '';
+let dirty = false;
 
-  function recomputeDirty() {
-    setDirty(editor.value !== savedSnapshot);
-  }
+function setDirty(next) {
+  if (next === dirty) return;
+  dirty = next;
+  platform.setDirty(dirty);
+}
 
-  async function doSave() {
-    const result = await window.dt.saveFile(editor.value);
-    if (result && result.ok) {
-      savedSnapshot = editor.value;
-      setDirty(false);
-    }
-    return result;
-  }
+function recomputeDirty() {
+  setDirty(editor.value !== savedSnapshot);
+}
 
-  async function doSaveAs() {
-    const result = await window.dt.saveFileAs(editor.value);
-    if (result && result.ok) {
-      savedSnapshot = editor.value;
-      setDirty(false);
-    }
-    return result;
-  }
-
-  editor.addEventListener('input', recomputeDirty);
-
-  editor.addEventListener('keydown', (e) => {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const start = editor.selectionStart;
-      const end = editor.selectionEnd;
-      editor.setRangeText('\t', start, end, 'end');
-      recomputeDirty();
-      return;
-    }
-    const mod = e.metaKey || e.ctrlKey;
-    if (mod && (e.key === 's' || e.key === 'S')) {
-      e.preventDefault();
-      if (e.shiftKey) doSaveAs(); else doSave();
-    }
-  });
-
-  window.dt.onLoad(({ content }) => {
-    editor.value = content ?? '';
+async function doSave() {
+  const result = await platform.saveFile(editor.value);
+  if (result && result.ok) {
     savedSnapshot = editor.value;
     setDirty(false);
-    editor.focus();
-  });
+  }
+  return result;
+}
 
-  window.dt.onMenuSave(doSave);
-  window.dt.onMenuSaveAs(doSaveAs);
+async function doSaveAs() {
+  const result = await platform.saveFileAs(editor.value);
+  if (result && result.ok) {
+    savedSnapshot = editor.value;
+    setDirty(false);
+  }
+  return result;
+}
 
-  window.dt.onSaveAndClose(async () => {
-    const result = await doSave();
-    if (result && result.ok) window.dt.confirmClose();
-  });
+async function doOpen() {
+  const result = await platform.openFile();
+  if (result && result.ok) {
+    // onLoad callback updates the editor.
+  }
+  return result;
+}
 
-  window.addEventListener('dragover', (e) => { e.preventDefault(); });
-  window.addEventListener('drop', (e) => {
+editor.addEventListener('input', recomputeDirty);
+
+editor.addEventListener('keydown', (e) => {
+  if (e.key === 'Tab') {
     e.preventDefault();
-    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if (!file) return;
-    const p = window.dt.pathForFile(file);
-    if (p) window.dt.openPath(p);
-  });
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    editor.setRangeText('\t', start, end, 'end');
+    recomputeDirty();
+    return;
+  }
+  const mod = e.metaKey || e.ctrlKey;
+  if (!mod) return;
+  if (e.key === 's' || e.key === 'S') {
+    e.preventDefault();
+    if (e.shiftKey) doSaveAs(); else doSave();
+  } else if (e.key === 'o' || e.key === 'O') {
+    e.preventDefault();
+    doOpen();
+  }
+});
 
+platform.onLoad(({ content }) => {
+  editor.value = content ?? '';
+  savedSnapshot = editor.value;
+  setDirty(false);
   editor.focus();
-})();
+});
+
+platform.onMenuSave(doSave);
+platform.onMenuSaveAs(doSaveAs);
+
+platform.onSaveAndClose(async () => {
+  const result = await doSave();
+  if (result && result.ok) platform.confirmClose();
+});
+
+window.addEventListener('dragover', (e) => { e.preventDefault(); });
+window.addEventListener('drop', (e) => {
+  e.preventDefault();
+  const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (!file) return;
+  platform.openDroppedFile(file);
+});
+
+editor.focus();
+
+// Service worker for offline use; only meaningful in the web build (Electron
+// uses file:// where SW is unavailable, and Capacitor handles its own caching).
+if (platform.name === 'web' && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}

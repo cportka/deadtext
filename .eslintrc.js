@@ -19,5 +19,25 @@ module.exports = {
     'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-console': 'off'
   },
-  ignorePatterns: ['node_modules/', 'dist/', 'out/', 'package-lock.json']
+  overrides: [
+    {
+      files: ['src/**/*.js'],
+      parserOptions: { sourceType: 'module' },
+      env: { browser: true, serviceworker: true }
+    },
+    {
+      files: ['src/sw.js'],
+      env: { browser: false, serviceworker: true }
+    }
+  ],
+  ignorePatterns: [
+    'node_modules/',
+    'dist/',
+    'dist-web/',
+    'dist-mobile/',
+    'android/',
+    'ios/',
+    'out/',
+    'package-lock.json'
+  ]
 };

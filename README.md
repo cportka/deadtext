@@ -6,6 +6,9 @@ A bit like TextEdit or Notepad, but even simpler and with fewer features.
 No hidden text. No formatting. No settings to fiddle with. Just a textarea
 and your file. UTF-8 in, UTF-8 out.
 
+Same code, every platform: macOS, Windows, Linux desktop apps; a PWA you
+can install from any browser; iOS and Android apps via Capacitor.
+
 > "because everything sucked for this sort of thing" — cportka
 
 ## Run from source
@@ -14,20 +17,66 @@ Requires Node 20+.
 
 ```sh
 npm install
-npm start
+npm start                 # Electron desktop
+npm run serve:web         # Web build at http://127.0.0.1:5173
 ```
 
-## Build installers
+## Build desktop installers
 
 ```sh
-npm run build:mac     # .dmg + .zip (x64 + arm64)
-npm run build:win     # NSIS installer + portable .exe
-npm run build:linux   # AppImage + .deb + .rpm
+npm run build:mac         # .dmg + .zip (x64 + arm64)
+npm run build:win         # NSIS installer + portable .exe
+npm run build:linux       # AppImage + .deb + .rpm
 ```
 
 Outputs go to `dist/`. Builds for a given OS must be produced on that OS
 (or via the GitHub Actions workflow), with one exception: Linux builds work
 fine from macOS or Linux runners.
+
+## Build the web app
+
+```sh
+npm run build:web         # produces dist-web/
+```
+
+`dist-web/` is a static site — drop it on any web host. Push to `main` and
+CI auto-deploys to GitHub Pages.
+
+## Build the mobile apps
+
+iOS and Android use [Capacitor](https://capacitorjs.com) to wrap the web
+build. The `android/` project is committed; the `ios/` project is generated
+on-demand because it requires macOS to scaffold.
+
+```sh
+# one-time per checkout
+npm run cap:add:ios       # macOS only
+
+# then, per build
+npm run build:android     # produces dist-mobile/DeadText-debug.apk
+npm run build:ios         # macOS only — produces dist-mobile/ios/App.app for the simulator
+```
+
+For local development, open the native projects in their IDEs:
+
+```sh
+npm run cap:open:ios      # opens Xcode
+npm run cap:open:android  # opens Android Studio
+```
+
+CI builds an unsigned `app-debug.apk` and a simulator-only iOS `.app` on
+every push so you can sideload to test.
+
+### Real-world distribution
+
+| Channel              | What's needed                                              |
+| -------------------- | ---------------------------------------------------------- |
+| GitHub Releases      | Tag `v*` — installers attached automatically               |
+| macOS Gatekeeper     | Apple Developer account ($99/yr) + signing/notarization    |
+| Windows SmartScreen  | Code-signing cert (~$200-400/yr), or accept the warning    |
+| Apple App Store      | Apple Developer account, Xcode submission                  |
+| Google Play          | Play Console account ($25 one-time), signed release AAB    |
+| Web (PWA)            | Already deployed to GitHub Pages on every push to `main`   |
 
 ## Keys
 
@@ -40,8 +89,8 @@ fine from macOS or Linux runners.
 | Close      | `Cmd + W`          | `Ctrl + W`        |
 | Quit       | `Cmd + Q`          | `Ctrl + Q`        |
 
-You can also drop a file onto the window to open it, or use "Open With…"
-from your OS file manager.
+Drop a file onto the window to open it. The OS "Open with…" menu lists
+DeadText for txt/md/log/json/csv/ini/yml/yaml/xml.
 
 ## License
 
