@@ -41,10 +41,21 @@ npm run serve:web         # serve dist-web/ at http://127.0.0.1:5173
 ```
 
 `dist-web/` is a static site — drop it on any web host. Push to `main` and
-CI auto-deploys to GitHub Pages. Layout:
+CI publishes it to the `gh-pages` branch, which GitHub Pages serves. Layout:
 
 - `dist-web/`       — the landing page with auto-detected download buttons
 - `dist-web/app/`   — the PWA editor itself
+
+### One-time GitHub Pages setup
+
+After the first push to `main`, the `web` job creates a `gh-pages` branch.
+In the GitHub UI go to **Settings → Pages** and set:
+
+- **Source:** Deploy from a branch
+- **Branch:** `gh-pages`  /  **Folder:** `/ (root)`
+
+The site goes live at `https://cportka.github.io/deadtext/` within a minute.
+Every subsequent push to `main` redeploys automatically — no further config.
 
 ## Build the mobile apps
 
