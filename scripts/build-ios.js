@@ -29,9 +29,8 @@ run(process.execPath, [path.join(__dirname, 'build-web.js')]);
 run('npx', ['--yes', 'cap', 'sync', 'ios']);
 
 const appDir = path.join(iosDir, 'App');
-const archivePath = path.join(root, 'dist-mobile', 'DeadText-Simulator.xcarchive');
 const exportDir = path.join(root, 'dist-mobile', 'ios');
-fs.mkdirSync(path.dirname(archivePath), { recursive: true });
+fs.mkdirSync(path.dirname(exportDir), { recursive: true });
 
 run('xcodebuild', [
   '-workspace', path.join(appDir, 'App.xcworkspace'),

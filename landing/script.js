@@ -44,10 +44,6 @@
   }
 
   function detectArch() {
-    const data = navigator.userAgentData;
-    if (data && data.getHighEntropyValues) {
-      // Best-effort; we don't await it — we just trust the cheap signal below.
-    }
     const ua = navigator.userAgent || '';
     if (/aarch64|arm64/i.test(ua)) return 'arm64';
     if (/x86_64|x64|Win64|WOW64/i.test(ua)) return 'x64';
