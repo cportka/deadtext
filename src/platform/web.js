@@ -14,8 +14,6 @@ let currentName = null;
 let dirty = false;
 
 let loadCb = null;
-let saveCb = null;
-let saveAsCb = null;
 
 function hasFsAccess() {
   return typeof window !== 'undefined' && typeof window.showOpenFilePicker === 'function';
@@ -164,16 +162,11 @@ const web = {
     // Surface the original name on the next setName/load so the title is correct.
   },
 
-  onMenuSave(cb) { saveCb = cb; window.__dtOnMenuSave = cb; },
-  onMenuSaveAs(cb) { saveAsCb = cb; window.__dtOnMenuSaveAs = cb; },
+  onMenuSave(_cb) { /* no system menus on web */ },
+  onMenuSaveAs(_cb) { /* no system menus on web */ },
 
   onSaveAndClose(_cb) { /* not applicable in browser */ },
   confirmClose() { /* not applicable in browser */ }
 };
-
-// Expose internal hooks so the renderer can wire keyboard shortcuts that
-// reuse the same callbacks regardless of platform.
-export function getMenuSaveHandler() { return saveCb; }
-export function getMenuSaveAsHandler() { return saveAsCb; }
 
 export default web;
