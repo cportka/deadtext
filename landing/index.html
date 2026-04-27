@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="DeadText is a dead simple plain-text editor for macOS, Windows, Linux, iOS, Android, and the web. UTF-8 in, UTF-8 out. No formatting, no settings." />
-  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0e0e0e" id="theme-color-meta" />
   <link rel="icon" href="./icons/favicon.png" type="image/png" />
   <link rel="apple-touch-icon" href="./icons/icon-512.png" />
   <meta property="og:title" content="DeadText" />
@@ -14,24 +13,38 @@
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary" />
   <title>DeadText — a dead simple plain-text editor</title>
+  <script>
+    // Apply the saved theme synchronously so the page never flashes the
+    // wrong palette. First-time visitors get dark; once they toggle, their
+    // choice is remembered.
+    (function () {
+      try {
+        var t = localStorage.getItem('deadtext-theme');
+        if (t !== 'dark' && t !== 'light') t = 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
   <style>
-    :root {
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #0e0e0e;
+      --fg: #f4f4f4;
+      --muted: #9a9a9a;
+      --border: #2a2a2a;
+      --accent: #f4f4f4;
+      --accent-fg: #0e0e0e;
+    }
+    :root[data-theme="light"] {
+      color-scheme: light;
       --bg: #ffffff;
       --fg: #111111;
       --muted: #666666;
       --border: #e6e6e6;
       --accent: #111111;
       --accent-fg: #ffffff;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0e0e0e;
-        --fg: #f4f4f4;
-        --muted: #9a9a9a;
-        --border: #2a2a2a;
-        --accent: #f4f4f4;
-        --accent-fg: #0e0e0e;
-      }
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
@@ -189,6 +202,7 @@
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 8px;
+      align-items: center;
     }
     footer a {
       color: var(--muted);
@@ -203,6 +217,20 @@
       min-height: 18px;
     }
     .status .err { color: #c0392b; }
+    .theme-toggle {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .theme-toggle:hover { color: var(--fg); border-color: var(--fg); }
+    [data-theme-show] { display: none; }
+    :root[data-theme="dark"] [data-theme-show="dark"] { display: inline; }
+    :root[data-theme="light"] [data-theme-show="light"] { display: inline; }
     @media (max-width: 480px) {
       main { padding: 32px 20px 16px; }
       h1 { font-size: 32px; }
@@ -247,6 +275,10 @@
       &middot;
       <a href="https://github.com/cportka/deadtext/issues">Issues</a>
     </span>
+    <button type="button" class="theme-toggle" data-theme-toggle>
+      <span data-theme-show="dark">Switch to light</span>
+      <span data-theme-show="light">Switch to dark</span>
+    </button>
   </footer>
 
   <script src="./script.js"></script>

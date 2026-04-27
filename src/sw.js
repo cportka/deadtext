@@ -8,6 +8,7 @@ const CACHE = `deadtext-${VERSION}`;
 const SHELL = [
   './',
   './index.html',
+  './theme-init.js',
   './renderer.js',
   './platform/index.js',
   './platform/electron.js',

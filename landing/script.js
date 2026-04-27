@@ -2,6 +2,23 @@
 // Falls back gracefully if the API is unreachable or rate-limited.
 
 (function () {
+  // Theme toggle: dark by default, persisted in localStorage so the choice
+  // sticks across sessions and is shared with the PWA at /app/.
+  const THEME_KEY = 'deadtext-theme';
+  const themeMeta = document.getElementById('theme-color-meta');
+  function applyTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    if (themeMeta) themeMeta.setAttribute('content', t === 'light' ? '#ffffff' : '#0e0e0e');
+  }
+  document.querySelectorAll('[data-theme-toggle]').forEach((el) => {
+    el.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      const next = current === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* private mode */ }
+    });
+  });
+
   const REPO = 'cportka/deadtext';
   const API = `https://api.github.com/repos/${REPO}/releases/latest`;
   const RELEASES_URL = `https://github.com/${REPO}/releases`;

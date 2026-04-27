@@ -1,5 +1,23 @@
 import platform from './platform/index.js';
 
+const THEME_KEY = 'deadtext-theme';
+const themeToggle = document.getElementById('theme-toggle');
+const themeMeta = document.getElementById('theme-color-meta');
+
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  if (themeMeta) themeMeta.setAttribute('content', t === 'light' ? '#ffffff' : '#111111');
+}
+
+if (themeToggle) {
+  themeToggle.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* private mode */ }
+  });
+}
+
 const editor = document.getElementById('text-editor');
 let savedSnapshot = '';
 let dirty = false;
