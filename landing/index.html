@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="DeadText is a dead simple plain-text editor for macOS, Windows, Linux, iOS, Android, and the web. UTF-8 in, UTF-8 out. No formatting, no settings." />
-  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0e0e0e" />
+  <meta name="color-scheme" content="dark" />
   <link rel="icon" href="./icons/favicon.png" type="image/png" />
   <link rel="apple-touch-icon" href="./icons/icon-512.png" />
   <meta property="og:title" content="DeadText" />
@@ -16,22 +16,13 @@
   <title>DeadText — a dead simple plain-text editor</title>
   <style>
     :root {
-      --bg: #ffffff;
-      --fg: #111111;
-      --muted: #666666;
-      --border: #e6e6e6;
-      --accent: #111111;
-      --accent-fg: #ffffff;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0e0e0e;
-        --fg: #f4f4f4;
-        --muted: #9a9a9a;
-        --border: #2a2a2a;
-        --accent: #f4f4f4;
-        --accent-fg: #0e0e0e;
-      }
+      color-scheme: dark;
+      --bg: #0e0e0e;
+      --fg: #f4f4f4;
+      --muted: #9a9a9a;
+      --border: #2a2a2a;
+      --accent: #f4f4f4;
+      --accent-fg: #0e0e0e;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
