@@ -9,8 +9,6 @@ and your file. UTF-8 in, UTF-8 out.
 Same code, every platform: macOS, Windows, Linux desktop apps; a PWA you
 can install from any browser; iOS and Android apps via Capacitor.
 
-> "because everything sucked for this sort of thing" — cportka
-
 ## Run from source
 
 Requires Node 20+.
@@ -21,6 +19,32 @@ npm start                 # Electron desktop
 npm run serve:web         # Web build at http://127.0.0.1:5173
 ```
 
+## Project structure
+
+```
+main.js, preload.js       Electron main + preload
+src/                      The app itself — shared by every platform
+  index.html              Single textarea, no chrome
+  renderer.js             Editor logic; talks only to platform/
+  platform/
+    index.js              Detects runtime, picks an implementation
+    electron.js           IPC to main.js via window.dt
+    web.js                File System Access API + download fallback
+    capacitor.js          @capacitor/filesystem on iOS/Android
+  sw.js                   Service worker for offline web
+  manifest.webmanifest    PWA manifest
+landing/                  Marketing/download page served at the root
+android/                  Capacitor project (committed)
+ios/                      Capacitor project (generated on demand — needs macOS)
+build/                    Icon source + electron-builder resources
+scripts/                  Build scripts (web, mobile, icons)
+```
+
+The renderer is platform-agnostic: it imports `platform/index.js`, which
+returns one of three modules with the same interface. Adding a new
+platform means writing a new module and teaching `platform/index.js` how
+to detect it.
+
 ## Build desktop installers
 
 ```sh
@@ -29,9 +53,10 @@ npm run build:win         # NSIS installer + portable .exe
 npm run build:linux       # AppImage + .deb + .rpm
 ```
 
-Outputs go to `dist/`. Builds for a given OS must be produced on that OS
-(or via the GitHub Actions workflow), with one exception: Linux builds work
-fine from macOS or Linux runners.
+Outputs go to `dist/`. Each OS must build its own installers locally,
+except Linux, which can also be built from macOS. For full cross-platform
+builds, push to `main` or open a PR — the GitHub Actions workflow handles
+all three.
 
 ## Build the web app
 
@@ -40,32 +65,23 @@ npm run build:web         # produces dist-web/
 npm run serve:web         # serve dist-web/ at http://127.0.0.1:5173
 ```
 
-`dist-web/` is a static site — drop it on any web host. Push to `main` and
-CI publishes it to the `gh-pages` branch, which GitHub Pages serves. Layout:
+`dist-web/` is a static site — drop it on any web host. Layout:
 
 - `dist-web/`       — the landing page with auto-detected download buttons
 - `dist-web/app/`   — the PWA editor itself
 
-### One-time GitHub Pages setup
-
-After the first push to `main`, the `web` job creates a `gh-pages` branch.
-In the GitHub UI go to **Settings → Pages** and set:
-
-- **Source:** Deploy from a branch
-- **Branch:** `gh-pages`  /  **Folder:** `/ (root)`
-
-The site goes live at `https://cportka.github.io/deadtext/` within a minute.
-Every subsequent push to `main` redeploys automatically — no further config.
+Pushes to `main` redeploy the site to the `gh-pages` branch automatically
+via GitHub Actions; the site lives at `https://cportka.github.io/deadtext/`.
 
 ## Build the mobile apps
 
 iOS and Android use [Capacitor](https://capacitorjs.com) to wrap the web
-build. The `android/` project is committed; the `ios/` project is generated
-on-demand because it requires macOS to scaffold.
+build. The `android/` project is committed. The `ios/` project is
+generated on demand because scaffolding it requires macOS.
 
 ```sh
-# one-time per checkout
-npm run cap:add:ios       # macOS only
+# one-time per checkout, macOS only
+npm run cap:add:ios
 
 # then, per build
 npm run build:android     # produces dist-mobile/DeadText-debug.apk
@@ -82,16 +98,18 @@ npm run cap:open:android  # opens Android Studio
 CI builds an unsigned `app-debug.apk` and a simulator-only iOS `.app` on
 every push so you can sideload to test.
 
-### Real-world distribution
+## Icon
 
-| Channel              | What's needed                                              |
-| -------------------- | ---------------------------------------------------------- |
-| GitHub Releases      | Tag `v*` — installers attached automatically               |
-| macOS Gatekeeper     | Apple Developer account ($99/yr) + signing/notarization    |
-| Windows SmartScreen  | Code-signing cert (~$200-400/yr), or accept the warning    |
-| Apple App Store      | Apple Developer account, Xcode submission                  |
-| Google Play          | Play Console account ($25 one-time), signed release AAB    |
-| Web (PWA)            | Already deployed to GitHub Pages on every push to `main`   |
+The app icon lives at `build/icon.svg`. Edit it, then run:
+
+```sh
+npm run gen:icons
+```
+
+That regenerates the `.icns`, `.ico`, `.png`, and PWA icon set from the
+SVG. The desktop and web build scripts run this automatically; you only
+need to invoke it manually if you want to inspect the output without a
+full build.
 
 ## Keys
 
@@ -110,3 +128,7 @@ DeadText for txt/md/log/json/csv/ini/yml/yaml/xml.
 ## License
 
 ISC. See [LICENSE](./LICENSE).
+
+---
+
+> "because everything sucked for this sort of thing" — cportka
